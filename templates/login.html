@@ -3,6 +3,11 @@
 login
 {% endblock %}
 {% block body %}
+{% if errors %}
+  {% for error in errors %}
+    <div> Warning: {{ error }} </div>
+  {% endfor %}
+{% endif %}
 <div class="container mt-4">
     <div class="container mt-4">
         <h1 class="text-center">Login</h1>
@@ -11,11 +16,11 @@ login
             <form method="POST">
               <div class="form-group">
                 <label for="email">Email address</label>
-                <input type="email" class="form-control" id="email" placeholder="Enter email">
+                <input type="email" class="form-control" id="email" placeholder="Enter email" name="email">
               </div>
               <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" class="form-control" id="password" placeholder="Password">
+                <input type="password" class="form-control" id="password" placeholder="Password" name="password">
               </div>
               <div class="text-center">
                 <button type="submit" class="btn btn-primary">login</button>
