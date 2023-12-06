@@ -75,5 +75,19 @@ def login():
     return render_template("login.html")
 
 
+@app.route('/logout')
+def logout():
+    """
+    Handle user logout.
+
+    Delete the user session and redirect to the login page.
+    """
+    session = request.cookies.get('session', '')
+    authenticate.deleteSession(session)
+    response = make_response(redirect(url_for('login')))
+    response.set_cookie('session', '', max_age=0)
+    return response
+
+
 if __name__ == "__main__":
     app.run(host="localhost", port=5000, debug=True)
