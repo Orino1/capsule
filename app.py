@@ -43,12 +43,16 @@ def signup():
     return render_template("signup.html")
 
 
-@app.route("/dashboard")
+@app.route('/dashboard')
 def dashboard():
     """
-    for testing
+    Render the user dashboard.
+    Redirect to login if the user is not authenticated.
     """
-    return 'ok'
+    if not authenticate.isAuthenticated(request):
+        return redirect(url_for('login'))
+
+    return render_template('dashboard.html')
 
 
 @app.route("/login", methods=['POST', 'GET'])
