@@ -10,6 +10,7 @@ from flask import (
     make_response
 )
 from authentication import authenticate
+from mail import esmtp
 
 
 app = Flask(__name__)
@@ -38,8 +39,9 @@ def signup():
         token = authenticate.tokenGenerator()
         errors = authenticate.registerUser(request, token)
         if errors == []:
-
-            #here send an email with the token in it
+            email = request.form.get('email', '').lower().strip()
+            username = request.form.get('username', '').strip()
+            esmtp.verifyEmail(email, username, token)
             return render_template('emailConfirm.html')
         else:
             return render_template("signup.html", errors=errors)
