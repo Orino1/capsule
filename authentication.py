@@ -49,6 +49,7 @@ class AuthenticationHandler():
 
     __usersTable = 'users'
     __sessions = {}
+    __emailValidate = {}
 
     def genSessions(self):
         """
@@ -58,6 +59,18 @@ class AuthenticationHandler():
             str: A session token.
         """
         return secrets.token_hex(16)
+
+    def validateEmail(self, token):
+        """
+
+        """
+        if token in AuthenticationHandler.__emailValidate:
+            email = AuthenticationHandler.__emailValidate[token]
+            query = f'UPDATE {AuthenticationHandler.__usersTable} SET verified = TRUE WHERE email = %s'
+            param = (email,)
+            db.queryOne(query, param)
+            del AuthenticationHandler.__emailValidate[token]
+        
 
     def registerUser(self, request):
         """
@@ -102,7 +115,7 @@ class AuthenticationHandler():
         if errors != []:
             return errors
         if self.validUser(request):
-            query = f'SELECT id FROM {AuthenticationHandler.__usersTable} where email = %s'
+            query = f'SELECT id FROM {AuthenticationHandler.__usersTable} where email = %s AND verified = TRUE'
             param = (request.form.get('email'.lower()),)
             id = db.queryOne(query, param)
             if isinstance(id, list):
@@ -155,7 +168,8 @@ class AuthenticationHandler():
         if isinstance(result, list):
             return False
         hashedPass = result.get('hashed_password')
-        if bcrypt.checkpw(request.form.get('password', '').encode('utf-8'), hashedPass.encode('utf-8')):
+        verified = result.get('verified')
+        if bcrypt.checkpw(request.form.get('password', '').encode('utf-8'), hashedPass.encode('utf-8')) and verified:
             return True
         return False
 
@@ -171,6 +185,12 @@ class AuthenticationHandler():
         """
         session = request.cookies.get('session')
         return AuthenticationHandler.__sessions.get(session)
+
+    def tokenGenerator(self, request):
+        # also here soon im gonna add the functionality of sending emails with links to each new user
+        #theer is huge bug here if the application is closed or restarted, users who are not virefied will no longer be able to verfy there accounts as the tokens are stored in mem and lost so the ideal choice should be a table in the database but im too tired maybe the next day
+        email = request.form.get('email', '').lower().strip()
+        AuthenticationHandler.__emailValidate[secrets.token_urlsafe(69)] = email
 
 
 authenticate = AuthenticationHandler()
