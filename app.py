@@ -35,10 +35,11 @@ def signup():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        errors = authenticate.registerUser(request)
+        token = authenticate.tokenGenerator()
+        errors = authenticate.registerUser(request, token)
         if errors == []:
-            #here generate the token
-            authenticate.tokenGenerator(request)
+
+            #here send an email with the token in it
             return render_template('emailConfirm.html')
         else:
             return render_template("signup.html", errors=errors)
@@ -67,13 +68,13 @@ def login():
     If the request method is POST, attempt to log in the user.
     """
     if authenticate.isAuthenticated(request):
-        return redirect(url_for('profile'))
+        return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
         errors = authenticate.loginUser(request)
         if not isinstance(errors, list):
             session = errors
-            response = make_response(redirect(url_for('profile')))
+            response = make_response(redirect(url_for('dashboard')))
             response.set_cookie('session', session, max_age=3600)
             return response
         else:
