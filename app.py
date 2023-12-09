@@ -6,6 +6,7 @@ from flask import (
     render_template,
     request, redirect,
     url_for,
+    make_response,
     make_response
 )
 from authentication import authenticate
@@ -43,12 +44,16 @@ def signup():
     return render_template("signup.html")
 
 
-@app.route("/dashboard")
+@app.route('/dashboard')
 def dashboard():
     """
-    for testing
+    Render the user dashboard.
+    Redirect to login if the user is not authenticated.
     """
-    return 'ok'
+    if not authenticate.isAuthenticated(request):
+        return redirect(url_for('login'))
+
+    return render_template('dashboard.html')
 
 
 @app.route("/login", methods=['POST', 'GET'])
@@ -73,6 +78,20 @@ def login():
             return render_template("login.html", errors=errors)
 
     return render_template("login.html")
+
+
+@app.route('/logout')
+def logout():
+    """
+    Handle user logout.
+
+    Delete the user session and redirect to the login page.
+    """
+    session = request.cookies.get('session', '')
+    authenticate.deleteSession(session)
+    response = make_response(redirect(url_for('login')))
+    response.set_cookie('session', '', max_age=0)
+    return response
 
 
 if __name__ == "__main__":
