@@ -2,6 +2,7 @@ CREATE DATABASE IF NOT EXISTS test;
 
 USE test;
 
+
 CREATE TABLE IF NOT EXISTS users (
     id CHAR(36) PRIMARY KEY,
     hashed_password VARCHAR(255),
