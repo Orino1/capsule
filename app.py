@@ -6,6 +6,7 @@ from flask import (
     render_template,
     request, redirect,
     url_for,
+    make_response,
     make_response
 )
 from authentication import authenticate
@@ -36,7 +37,7 @@ def signup():
     if request.method == 'POST':
         errors = authenticate.registerUser(request)
         if errors == []:
-            return redirect(url_for('login'))
+            return render_template('emailConfirm.html')
         else:
             return render_template("signup.html", errors=errors)
 
