@@ -49,7 +49,6 @@ class AuthenticationHandler():
 
     __usersTable = 'users'
     __sessions = {}
-    __emailValidate = {}
 
     def genSessions(self):
         """
@@ -64,15 +63,14 @@ class AuthenticationHandler():
         """
 
         """
-        if token in AuthenticationHandler.__emailValidate:
-            email = AuthenticationHandler.__emailValidate[token]
-            query = f'UPDATE {AuthenticationHandler.__usersTable} SET verified = TRUE WHERE email = %s'
-            param = (email,)
-            db.queryOne(query, param)
-            del AuthenticationHandler.__emailValidate[token]
+        exists = db.tokenExists(token)
+        if exists:
+            query = 'UPDATE users SET verified = 1 WHERE token = %s'
+            param = (token,)
+            db.insert(query, param)
         
 
-    def registerUser(self, request):
+    def registerUser(self, request, token):
         """
         registerUser(request)
 
@@ -92,13 +90,15 @@ class AuthenticationHandler():
         email = request.form.get('email', '').lower().strip()
         password = request.form.get('password', '').strip()
         hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        # Remember you should make the database clean out any unverefied emails every 1h
         data = (
             id,
             username,
             email,
-            hashedPassword
+            hashedPassword,
+            token
         )
-        query = f"INSERT INTO {AuthenticationHandler.__usersTable} (id, username, email, hashed_password) VALUES (%s, %s, %s, %s)"
+        query = f"INSERT INTO {AuthenticationHandler.__usersTable} (id, username, email, hashed_password, token) VALUES (%s, %s, %s, %s, %s)"
         return db.insertUser(query, data)
 
     def loginUser(self, request):
@@ -115,7 +115,7 @@ class AuthenticationHandler():
         if errors != []:
             return errors
         if self.validUser(request):
-            query = f'SELECT id FROM {AuthenticationHandler.__usersTable} where email = %s AND verified = TRUE'
+            query = f'SELECT id FROM {AuthenticationHandler.__usersTable} where email = %s'
             param = (request.form.get('email'.lower()),)
             id = db.queryOne(query, param)
             if isinstance(id, list):
@@ -161,7 +161,7 @@ class AuthenticationHandler():
         Returns:
             bool: True if credentials are valid, False otherwise.
         """
-        query = f'SELECT hashed_password FROM {AuthenticationHandler.__usersTable} WHERE email = %s'
+        query = f'SELECT hashed_password, verified FROM {AuthenticationHandler.__usersTable} WHERE email = %s'
         param = (request.form.get('email', '').lower(),)
 
         result = db.queryOne(query, param)
@@ -186,11 +186,8 @@ class AuthenticationHandler():
         session = request.cookies.get('session')
         return AuthenticationHandler.__sessions.get(session)
 
-    def tokenGenerator(self, request):
-        # also here soon im gonna add the functionality of sending emails with links to each new user
-        #theer is huge bug here if the application is closed or restarted, users who are not virefied will no longer be able to verfy there accounts as the tokens are stored in mem and lost so the ideal choice should be a table in the database but im too tired maybe the next day
-        email = request.form.get('email', '').lower().strip()
-        AuthenticationHandler.__emailValidate[secrets.token_urlsafe(69)] = email
+    def tokenGenerator(self):
+        return secrets.token_urlsafe(69)
 
 
 authenticate = AuthenticationHandler()

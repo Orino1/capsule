@@ -153,5 +153,21 @@ class DatabaseEngine:
         finally:
             cursor.close()
 
+    def tokenExists(self, token):
+        """
+
+        """
+        query = "SELECT COUNT(*) FROM users WHERE token = %s"
+        param = (token,)
+        
+        cursor = self.__connection.cursor()
+        try:
+            cursor.execute(query, param)
+            count = cursor.fetchone()[0]
+            return True
+        except:
+            return False
+        finally:
+            cursor.close()
 
 db = DatabaseEngine()
