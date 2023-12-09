@@ -2,9 +2,10 @@ CREATE DATABASE IF NOT EXISTS test;
 
 USE test;
 
-CREATE TABLE IF NOT EXISTS UserData (
+CREATE TABLE IF NOT EXISTS USERS (
     id CHAR(36) PRIMARY KEY,
     hashed_password VARCHAR(255),
-    email VARCHAR(255),
-    username VARCHAR(35)
+    email VARCHAR(255) UNIQUE,
+    username VARCHAR(35),
+    verified BOOLEAN DEFAULT FALSE
 );
