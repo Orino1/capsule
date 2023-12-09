@@ -6,6 +6,7 @@ from flask import (
     render_template,
     request, redirect,
     url_for,
+    make_response,
     make_response
 )
 from authentication import authenticate
@@ -36,7 +37,9 @@ def signup():
     if request.method == 'POST':
         errors = authenticate.registerUser(request)
         if errors == []:
-            return redirect(url_for('login'))
+            #here generate the token
+            authenticate.tokenGenerator(request)
+            return render_template('emailConfirm.html')
         else:
             return render_template("signup.html", errors=errors)
 
@@ -91,6 +94,15 @@ def logout():
     response = make_response(redirect(url_for('login')))
     response.set_cookie('session', '', max_age=0)
     return response
+
+
+@app.route('/confirm/<token>')
+def emailConfirm(token):
+    """
+
+    """
+    authenticate.validateEmail(token)
+    return redirect(url_for('login'))
 
 
 if __name__ == "__main__":
