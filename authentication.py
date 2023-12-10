@@ -87,6 +87,7 @@ class AuthenticationHandler():
         db.insert(query, param)
         query = "UPDATE users SET resetpass = NULL WHERE resetpass = %s"
         param = (token,)
+        db.insert(query, param)
         return []
 
     def email(self, email):
