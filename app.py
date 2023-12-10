@@ -127,7 +127,7 @@ def resetPassword(token):
     #resetPass
     if request.method == 'POST':
         errors = authenticate.changePass(request, token)
-        if errors != []:
+        if errors == []:
             return redirect(url_for('login'))
         return render_template('resetpassword', errors=errors)
     return render_template('resetpassword.html')
