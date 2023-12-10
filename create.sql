@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(35),
     token VARCHAR(255),
     verified BOOLEAN DEFAULT FALSE,
+    resetpass VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -10,6 +10,23 @@ class EmailSender:
     """
     senderEmail = 'support@orino.tech'
 
+    def sendResetPass(self, receiverEmail, token):
+        """
+        """
+        message = MIMEMultipart()
+        message["From"] = EmailSender.senderEmail
+        message["To"] = receiverEmail
+        message["Subject"] = 'Reset Your Password'
+
+        with open(f"email/resetpass.html", "r") as html_file:
+            htmlContent = html_file.read()
+            htmlContent = htmlContent.replace('{{ token }}', token)
+            htmlPart = MIMEText(htmlContent, "html")
+            message.attach(htmlPart)
+
+        with smtplib.SMTP("localhost", 25) as server:
+            server.sendmail(EmailSender.senderEmail, receiverEmail, message.as_string())
+
     def verifyEmail(self, receiverEmail, username, token):
         """
         """

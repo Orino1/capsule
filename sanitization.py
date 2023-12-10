@@ -32,6 +32,17 @@ class Sanitization:
     """
     Simple Sanitization Class
     """
+    def resetPassForm(self, request):
+        errors = []
+        password = request.form.get('password1', '').strip()
+        confirm_password = request.form.get('password2', '').strip()
+        # both patterns are not mine
+        passwordPattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}|:\'<>,.?/~`])[A-Za-z\d!@#$%^&*()_+{}|:\'<>,.?/~`]{8,30}$'
+        if password == '' or confirm_password == '' or password != confirm_password:
+            errors.append('Invalid Password.')
+        elif not re.match(passwordPattern, password):
+            errors.append('Invalid Password.')
+        return errors
 
     def loginForm(self, request):
         """

@@ -68,7 +68,31 @@ class AuthenticationHandler():
             query = 'UPDATE users SET verified = 1 WHERE token = %s'
             param = (token,)
             db.insert(query, param)
-        
+
+    def setPassResetToken(self, email, token):
+        query = "UPDATE users SET resetpass = %s WHERE email = %s"
+        param = (token, email)
+        db.insert(query, param)
+
+    def changePass(self, request, token):
+        errors = sanitize.resetPassForm(request)
+        if errors != []:
+            return errors
+        if not db.resetTokenExists(token):
+            return ['No user Found please check your link']
+        password = request.form.get('password1', '').strip()
+        hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        query = "UPDATE users SET hashed_password = %s WHERE resetpass = %s"
+        param = (hashedPassword, token)
+        db.insert(query, param)
+        query = "UPDATE users SET resetpass = NULL WHERE resetpass = %s"
+        param = (token,)
+        return []
+
+    def email(self, email):
+        """
+        """
+        return db.emailExists(email)
 
     def registerUser(self, request, token):
         """

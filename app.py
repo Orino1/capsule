@@ -11,6 +11,7 @@ from flask import (
 )
 from authentication import authenticate
 from mail import esmtp
+from engine import db
 
 
 app = Flask(__name__)
@@ -106,6 +107,31 @@ def emailConfirm(token):
     """
     authenticate.validateEmail(token)
     return redirect(url_for('login'))
+
+@app.route('/forgotpassword')
+def forgotPassword():
+    """
+    """
+    if request.method == 'POST':
+        # generate the token and send an email
+        email = request.form.get('email', '').lower().strip()
+        if authenticate.email(email):
+            token = authenticate.tokenGenerator()
+            authenticate.setPassResetToken(email)
+            esmtp.sendResetPass(email, token)
+        return render_template('passresetconfirm.html')
+    return render_template('forgotpass.html')
+
+@app.route('/reset/<token>', methods=['POST', 'GET'])
+def resetPassword(token):
+    #resetPass
+    if request.method == 'POST':
+        errors = authenticate.changePass(request, token)
+        if errors != []:
+            return redirect(url_for('login'))
+        return render_template('resetpassword', errors=errors)
+    return render_template('resetpassword.html')
+
 
 
 if __name__ == "__main__":
