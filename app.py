@@ -108,7 +108,7 @@ def emailConfirm(token):
     authenticate.validateEmail(token)
     return redirect(url_for('login'))
 
-@app.route('/forgotpassword')
+@app.route('/forgotpassword', methods=['POST', 'GET'])
 def forgotPassword():
     """
     """
