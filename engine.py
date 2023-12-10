@@ -152,6 +152,38 @@ class DatabaseEngine:
                 return ['An error occurred']
         finally:
             cursor.close()
+    def resetTokenExists(self, token):
+        """
+
+        """
+        query = "SELECT COUNT(*) FROM users WHERE resetpass = %s"
+        param = (token,)
+        
+        cursor = self.__connection.cursor()
+        try:
+            cursor.execute(query, param)
+            count = cursor.fetchone()[0]
+            return count > 0
+        except:
+            return False
+        finally:
+            cursor.close()
+
+    def emailExists(self, email):
+        """
+        """
+        query = "SELECT COUNT(*) FROM users WHERE email = %s"
+        param = (email,)
+
+        cursor = self.__connection.cursor()
+        try:
+            cursor.execute(query, param)
+            count = cursor.fetchone()[0]
+            return count > 0
+        except:
+            return False
+        finally:
+            cursor.close()
 
     def tokenExists(self, token):
         """
@@ -164,7 +196,7 @@ class DatabaseEngine:
         try:
             cursor.execute(query, param)
             count = cursor.fetchone()[0]
-            return True
+            return count > 0
         except:
             return False
         finally:
