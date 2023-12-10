@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verification</title>
+    <title>Password Reset</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -29,10 +29,10 @@
             color: #666666;
         }
 
-        .verification-link {
+        .reset-link {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #4caf50;
+            background-color: #3498db;
             color: #ffffff;
             text-decoration: none;
             border-radius: 4px;
@@ -42,13 +42,13 @@
 </head>
 <body>
     <div class="container">
-        <h2>Email Verification</h2>
+        <h2>Password Reset</h2>
         <p>Dear {{ username }},</p>
-        <p>Please click the following link to verify your email address:</p>
-        <a href="https://www.orino.tech/confirm/{{ token }}" class="verification-link">
-            Verify Email
+        <p>We received a request to reset your password. If you made this request, please click the following link:</p>
+        <a href="https://www.orino.tech/reset/{{ token }}" class="reset-link">
+            Reset Password
         </a>
-        <p>If you didn't request this verification, you can ignore this email.</p>
+        <p>If you didn't request a password reset, you can ignore this email.</p>
     </div>
 </body>
 </html>
