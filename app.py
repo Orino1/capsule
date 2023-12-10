@@ -117,7 +117,7 @@ def forgotPassword():
         email = request.form.get('email', '').lower().strip()
         if authenticate.email(email):
             token = authenticate.tokenGenerator()
-            authenticate.setPassResetToken(email)
+            authenticate.setPassResetToken(email, token)
             esmtp.sendResetPass(email, token)
         return render_template('passresetconfirm.html')
     return render_template('forgotpass.html')
