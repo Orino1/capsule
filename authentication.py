@@ -154,7 +154,7 @@ class AuthenticationHandler():
         if bcrypt.checkpw(request.form.get('password', '').encode('utf-8'), hashedPass.encode('utf-8')) and verified:
             query = f'SELECT id FROM {AuthenticationHandler.__usersTable} where email = %s'
             param = (request.form.get('email'.lower()),)
-            result = db.queryOne(query, param)
+            succes, result = db.queryOne(query, param)
             session = self.genSessions()
             self.__sessions[session] = result['id']
             return session
