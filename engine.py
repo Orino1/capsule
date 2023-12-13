@@ -1,55 +1,10 @@
-"""
-Database Engine Module
-
-This module defines a basic DatabaseEngine class for interacting with
-a MySQL database.
-
-Usage:
------------
-Instantiate the DatabaseEngine class and use its methods to perform
-database operations.
-
-Example:
------------
-from database_engine import DatabaseEngine
-
-# Instantiate the DatabaseEngine class
-db = DatabaseEngine()
-
-# Insert data into the database
-insert_errors = db.insert(query, param)
-
-# Query a single row from the database
-result = db.queryOne(query, param)
-
-# Insert user data into the database
-user_insert_errors = db.insertUser(query, param)
-
-"""
-
-
 import os
 import mysql.connector
-
+from error import error
 
 class DatabaseEngine:
-    """
-    Simple DatabaseEngine Class
-    """
 
     def __init__(self):
-        """
-        Initialize the DatabaseEngine instance.
-
-        Environment Variables:
-        -----------------------
-        - DB_HOST: The database host address.
-        - DB_PORT: The database port.
-        - DB_USER: The database username.
-        - DB_PASSWORD: The database password.
-        - DB_DATABASE: The database name.
-        """
-
         self.__host = os.getenv('DB_HOST')
         self.__port = int(os.getenv('DB_PORT'))
         self.__user = os.getenv('DB_USER')
@@ -65,32 +20,15 @@ class DatabaseEngine:
         )
 
     def insert(self, query, param):
-        """
-        Perform an insert operation on the database.
-
-        Parameters:
-        -----------
-        query : str
-            The SQL query for the insert operation.
-
-        param : tuple
-            The parameters for the SQL query.
-
-        Returns:
-        -----------
-        errors : list
-            List of error messages indicating issues with the database
-            operation.
-        """
         cursor = self.__connection.cursor()
         try:
             cursor.execute(query, param)
             self.__connection.commit()
-            return []
-        except Exception as err:
-            print(err)
+            return True
+        except:
             self.__connection.rollback()
-            return ["An error occurred:"]
+            error.add_error('An error occurred')
+            return False
         finally:
             cursor.close()
 
@@ -99,120 +37,56 @@ class DatabaseEngine:
         try:
             cursor.execute(query, param)
             result = cursor.fetchall()
-            return result
+            return True, result
         except:
             self.__connection.rollback()
-            return ['An error occurred']
+            error.add_error('An error occurred')
+            return False, None
         finally:
             cursor.close()
 
     def queryOne(self, query, param):
-        """
-        Perform a single-row query operation on the database.
-
-        Parameters:
-        -----------
-        query : str
-            The SQL query for the query operation.
-
-        param : tuple
-            The parameters for the SQL query.
-
-        Returns:
-        -----------
-        result : dict or list
-            The result of the query or a list containing an error message.
-        """
         cursor = self.__connection.cursor(dictionary=True)
         try:
             cursor.execute(query, param)
             result = cursor.fetchone()
-            return result
+            return True, result
         except:
-            self.__connection.rollback()
-            return ['An error occurred']
+            error.add_error('An error occurred')
+            return False, None
         finally:
             cursor.close()
 
-    def insertUser(self, query, param):
-        """
-        Perform an insert operation for user data on the database.
-
-        Parameters:
-        -----------
-        query : str
-            The SQL query for the insert operation.
-
-        param : tuple
-            The parameters for the SQL query.
-
-        Returns:
-        -----------
-        errors : list
-            List of error messages indicating issues with the database
-            operation.
-        """
-        cursor = self.__connection.cursor(dictionary=True)
-        try:
-            cursor.execute(query, param)
-            self.__connection.commit()
-            return []
-        except mysql.connector.Error as err:
-            self.__connection.rollback()
-            if err.errno == 1062:
-                return ['This email already exists']
-            else:
-                return ['An error occurred']
-        finally:
-            cursor.close()
     def resetTokenExists(self, token):
         """
 
         """
-        query = "SELECT COUNT(*) FROM users WHERE resetpass = %s"
+        query = "SELECT * FROM users WHERE reset_password_token = %s"
         param = (token,)
-        
-        cursor = self.__connection.cursor()
-        try:
-            cursor.execute(query, param)
-            count = cursor.fetchone()[0]
-            return count > 0
-        except:
-            return False
-        finally:
-            cursor.close()
+
+        success, result = self.queryOne(query, param)
+
+        return success and result
 
     def emailExists(self, email):
         """
         """
-        query = "SELECT COUNT(*) FROM users WHERE email = %s"
+        query = "SELECT * FROM users WHERE email = %s"
         param = (email,)
 
-        cursor = self.__connection.cursor()
-        try:
-            cursor.execute(query, param)
-            count = cursor.fetchone()[0]
-            return count > 0
-        except:
-            return False
-        finally:
-            cursor.close()
+        success, result = self.queryOne(query, param)
+
+        return success and result
 
     def tokenExists(self, token):
         """
 
         """
-        query = "SELECT COUNT(*) FROM users WHERE token = %s"
+        query = "SELECT * FROM users WHERE email_verification_token = %s"
         param = (token,)
         
-        cursor = self.__connection.cursor()
-        try:
-            cursor.execute(query, param)
-            count = cursor.fetchone()[0]
-            return count > 0
-        except:
-            return False
-        finally:
-            cursor.close()
+        success, result = self.queryOne(query, param)
+
+        return success and result
 
 db = DatabaseEngine()

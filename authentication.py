@@ -23,6 +23,7 @@ from sanitization import sanitize
 from engine import db
 import uuid
 import os
+from error import error
 
 class AuthenticationHandler():
     """
@@ -65,35 +66,31 @@ class AuthenticationHandler():
         """
         exists = db.tokenExists(token)
         if exists:
-            query = 'UPDATE users SET verified = 1 WHERE token = %s'
+            query = 'UPDATE users SET verified = 1 WHERE email_verification_token = %s'
             param = (token,)
             db.insert(query, param)
 
     def setPassResetToken(self, email, token):
-        query = "UPDATE users SET resetpass = %s WHERE email = %s"
+        query = "UPDATE users SET reset_password_token = %s WHERE email = %s"
         param = (token, email)
         db.insert(query, param)
 
     def changePass(self, request, token):
-        errors = sanitize.resetPassForm(request)
-        if errors != []:
-            return errors
+        if not sanitize.resetPassForm(request):
+            return False
+
         if not db.resetTokenExists(token):
-            return ['No user Found please check your link']
+            return False
+
         password = request.form.get('password1', '').strip()
         hashedPassword = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        query = "UPDATE users SET hashed_password = %s WHERE resetpass = %s"
+        query = "UPDATE users SET hashed_password = %s WHERE reset_password_token = %s"
         param = (hashedPassword, token)
         db.insert(query, param)
-        query = "UPDATE users SET resetpass = NULL WHERE resetpass = %s"
+        query = "UPDATE users SET reset_password_token = NULL WHERE reset_password_token = %s"
         param = (token,)
-        db.insert(query, param)
-        return []
+        return db.insert(query, param)
 
-    def email(self, email):
-        """
-        """
-        return db.emailExists(email)
 
     def registerUser(self, request, token):
         """
@@ -107,9 +104,9 @@ class AuthenticationHandler():
         Returns:
             list of errors or empty list: List of errors if registration fails, empty list otherwise.
         """
-        errors = sanitize.registrationForm(request)
-        if errors != []:
-            return errors
+        if not sanitize.registrationForm(request):
+            return False
+
         id = str(uuid.uuid4())
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').lower().strip()
@@ -121,9 +118,12 @@ class AuthenticationHandler():
             username,
             email,
             hashedPassword,
-            token
         )
-        query = f"INSERT INTO {AuthenticationHandler.__usersTable} (id, username, email, hashed_password, token) VALUES (%s, %s, %s, %s, %s)"
+
+        if db.emailExists(email):
+            return False, 'This email already exists'
+
+        query = f"INSERT INTO users (id, username, email, hashed_password) VALUES (%s, %s, %s, %s)"
         return db.insertUser(query, data)
 
     def loginUser(self, request):
@@ -136,19 +136,29 @@ class AuthenticationHandler():
         Returns:
             str or list of errors: Session token if login is successful, list of errors otherwise.
         """
-        errors = sanitize.loginForm(request)
-        if errors != []:
-            return errors
-        if self.validUser(request):
+        if not sanitize.loginForm(request):
+            return False
+
+        query = f'SELECT hashed_password, verified FROM users WHERE email = %s'
+        param = (request.form.get('email', '').lower(),)
+
+        succes, result = db.queryOne(query, param)
+
+        if not succes and not result:
+            return False
+
+        hashedPass = result.get('hashed_password')
+        verified = result.get('verified')
+
+        if bcrypt.checkpw(request.form.get('password', '').encode('utf-8'), hashedPass.encode('utf-8')) and verified:
             query = f'SELECT id FROM {AuthenticationHandler.__usersTable} where email = %s'
             param = (request.form.get('email'.lower()),)
-            id = db.queryOne(query, param)
-            if isinstance(id, list):
-                return ['An error occurred']
+            result = db.queryOne(query, param)
             session = self.genSessions()
-            self.__sessions[session] = id['id']
+            self.__sessions[session] = result['id']
             return session
-        return ['Check your email/password']
+        
+        return False
 
     def deleteSession(self, session):
         """
@@ -171,30 +181,6 @@ class AuthenticationHandler():
         """
         session = request.cookies.get('session', '')
         if AuthenticationHandler.__sessions.get(session) != None:
-            return True
-        return False
-
-    def validUser(self, request):
-        """
-        validUser(request)
-
-        Validates user credentials.
-
-        Args:
-            request: The request object containing user login details.
-
-        Returns:
-            bool: True if credentials are valid, False otherwise.
-        """
-        query = f'SELECT hashed_password, verified FROM {AuthenticationHandler.__usersTable} WHERE email = %s'
-        param = (request.form.get('email', '').lower(),)
-
-        result = db.queryOne(query, param)
-        if isinstance(result, list):
-            return False
-        hashedPass = result.get('hashed_password')
-        verified = result.get('verified')
-        if bcrypt.checkpw(request.form.get('password', '').encode('utf-8'), hashedPass.encode('utf-8')) and verified:
             return True
         return False
 

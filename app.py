@@ -14,9 +14,16 @@ from flask import (
 from authentication import authenticate
 from mail import esmtp
 from datetime import datetime
-import base64
+from error import error
+
 
 app = Flask(__name__)
+
+
+@app.before_request()
+def clear_errors():
+    # this simple idea saved me from going into a rabit hole
+    error.clear_errors()
 
 
 @app.route("/")
@@ -35,19 +42,16 @@ def signup():
     If user is authenticated, redirect to the dashboard page.
     If the request method is POST, attempt to register the user.
     """
-    if authenticate.isAuthenticated(request):
-        return redirect(url_for('dashboard'))
-
     if request.method == 'POST':
         token = authenticate.tokenGenerator()
-        errors = authenticate.registerUser(request, token)
-        if errors == []:
+
+        if authenticate.registerUser(request, token):
             email = request.form.get('email', '').lower().strip()
             username = request.form.get('username', '').strip()
             esmtp.verifyEmail(email, username, token)
             return render_template('emailConfirm.html')
         else:
-            return render_template("signup.html", errors=errors)
+            return render_template("signup.html", errors=error.errors)
 
     return render_template("signup.html")
 
@@ -61,7 +65,6 @@ def dashboard():
     if not authenticate.isAuthenticated(request):
         return redirect(url_for('login'))
 
-
     return render_template('dashboard.html')
 
 
@@ -73,18 +76,14 @@ def login():
     If user is authenticated, redirect to the dashboard page.
     If the request method is POST, attempt to log in the user.
     """
-    if authenticate.isAuthenticated(request):
-        return redirect(url_for('dashboard'))
-
     if request.method == 'POST':
-        errors = authenticate.loginUser(request)
-        if not isinstance(errors, list):
-            session = errors
+        session = authenticate.loginUser(request)
+        if session:
             response = make_response(redirect(url_for('dashboard')))
             response.set_cookie('session', session, max_age=3600)
             return response
         else:
-            return render_template("login.html", errors=errors)
+            return render_template("login.html", errors='Check email/password')
 
     return render_template("login.html")
 
@@ -130,9 +129,9 @@ def resetPassword(token):
     #resetPass
     if request.method == 'POST':
         errors = authenticate.changePass(request, token)
-        if errors == []:
+        if authenticate.changePass(request, token):
             return redirect(url_for('login'))
-        return render_template('resetpassword.html', errors=errors)
+        return render_template('resetpassword.html', errors='No user Found please check your link')
     return render_template('resetpassword.html')
 
 @app.route('/api/v1/capsules/', methods=['GET'])
