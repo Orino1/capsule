@@ -22,7 +22,7 @@ import secrets
 from sanitization import sanitize
 from engine import db
 import uuid
-
+import os
 
 class AuthenticationHandler():
     """
@@ -146,7 +146,7 @@ class AuthenticationHandler():
             if isinstance(id, list):
                 return ['An error occurred']
             session = self.genSessions()
-            self.__sessions[session] = id
+            self.__sessions[session] = id['id']
             return session
         return ['Check your email/password']
 
@@ -198,7 +198,7 @@ class AuthenticationHandler():
             return True
         return False
 
-    def getId(self, request):
+    def getId(request):
         """
         Retrieves the user ID associated with the current session.
 
@@ -213,6 +213,42 @@ class AuthenticationHandler():
 
     def tokenGenerator(self):
         return secrets.token_urlsafe(69)
+    
+    def allowedFile(self, filename):
+        allowerExtention = {'png', 'jpg', 'jpeg', 'gif'}
+        extention = filename.split('.')[-1]
+        return extention in allowerExtention
 
+    def addCapsuleToDB(self, request, title, image, message, open_at):
+        # Remember we gona change the whole classes to return true or false and no longer returning the list with errors in it
+        capsuleId = str(uuid.uuid4())
+        userId = AuthenticationHandler.getId(request)
+        
+        if image:
+            extention = image.filename.split('.')[-1]
+            imagename = f"{capsuleId}.{extention}"
+            imagePath = f"images/{imagename}"
+            image.save(imagePath)
+            query = "INSERT INTO capsules (capsuleid, title, user_id, image, message, open_at) VALUES (%s, %s, %s, %s, %s, %s)"
+            params = (capsuleId, title, userId, imagePath, message, open_at)
+        else:
+            query = "INSERT INTO capsules (capsuleid, title, user_id, message, open_at) VALUES (%s, %s, %s, %s, %s)"
+            params = (capsuleId, title, userId, message, open_at)
+
+        return db.insert(query, params)
+
+
+    def getcapsules(self , request):
+        userid = AuthenticationHandler.getId(request)
+        query = 'SELECT capsuleid, title, image, message, link FROM capsules WHERE user_id = %s AND opened = TRUE'
+        param = (userid,)
+        return db.queryAll(query, param)
+
+    def create_link_for_a_capsule(self, capsulid):
+        link = self.tokenGenerator()
+        query = 'UPDATE capsules SET link = %s WHERE  capsuleid = %s'
+        param = (link, capsulid)
+        db.insert(query, param)
+        return link
 
 authenticate = AuthenticationHandler()
