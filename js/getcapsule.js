@@ -2,7 +2,7 @@ $(function () {
   // Function to populate capsules on page load
   function populateCapsules() {
     $.ajax({
-      url: 'http://localhost:5000/api/v1/capsules/',
+      url: 'http://orino.tech/api/v1/capsules/',
       success: function (data) {
         if (data.length > 0) {
           // If there are capsules, hide the "No opened capsules" message

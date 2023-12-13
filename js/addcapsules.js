@@ -4,7 +4,7 @@ $(function () {
       var form_data = new FormData($('#capsule_form')[0]);
 
       $.ajax({
-        url: 'http://localhost:5000/api/v1/capsules/add',
+        url: 'http://orino.tech/api/v1/capsules/add',
         type: 'POST',
         data: form_data,
         processData: false,
