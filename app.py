@@ -20,7 +20,7 @@ from error import error
 app = Flask(__name__)
 
 
-@app.before_request()
+@app.before_request
 def clear_errors():
     # this simple idea saved me from going into a rabit hole
     error.clear_errors()
@@ -83,7 +83,7 @@ def login():
             response.set_cookie('session', session, max_age=3600)
             return response
         else:
-            return render_template("login.html", errors='Check email/password')
+            return render_template("login.html", error='Check email/password')
 
     return render_template("login.html")
 
