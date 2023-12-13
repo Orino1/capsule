@@ -118,12 +118,13 @@ class AuthenticationHandler():
             username,
             email,
             hashedPassword,
+            token
         )
 
         if db.emailExists(email):
             return False, 'This email already exists'
 
-        query = f"INSERT INTO users (id, username, email, hashed_password) VALUES (%s, %s, %s, %s)"
+        query = f"INSERT INTO users (id, username, email, hashed_password, email_verification_token) VALUES (%s, %s, %s, %s, %s)"
         return db.insert(query, data)
 
     def loginUser(self, request):
@@ -180,7 +181,7 @@ class AuthenticationHandler():
             bool: True if authenticated, False otherwise.
         """
         session = request.cookies.get('session', '')
-        if AuthenticationHandler.__sessions.get(session) != None:
+        if AuthenticationHandler.__sessions.get(session):
             return True
         return False
 
