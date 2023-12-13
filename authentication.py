@@ -124,7 +124,7 @@ class AuthenticationHandler():
             return False, 'This email already exists'
 
         query = f"INSERT INTO users (id, username, email, hashed_password) VALUES (%s, %s, %s, %s)"
-        return db.insertUser(query, data)
+        return db.insert(query, data)
 
     def loginUser(self, request):
         """
