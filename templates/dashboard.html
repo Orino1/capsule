@@ -1,9 +1,69 @@
-{% extends 'base.html' %}
-{% block title %}
-this is just a test page
+{% extends "base.html" %}
+
+{% block title %}Capsule Dashboard{% endblock %}
+
+{% block links %}
+  <style>
+    .dashboard-section {
+      border-right: 1px solid #ccc; /* Add a border between columns */
+      padding: 20px; /* Add some padding to sections */
+    }
+
+    .dashboard-section {
+      border-right: 1px solid #ccc; /* Add a border between columns */
+      padding: 20px; /* Add some padding to sections */
+    }
+
+    .capsule {
+      background-color: #f9f9f9; /* Light background color */
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .capsule img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+  <script src="/js/getcapsule.js" ></script>
+  <script src="/js/addcapsules.js" ></script>
 {% endblock %}
+
 {% block body %}
-<div class="container mt-4">
-    <h1>This is your dashboard</h1>
-</div>
+  <div class="container-fluid mt-4">
+    <h1 class="text-center">Welcome to Your Capsule Dashboard</h1><br><br>
+
+    <div class="row">
+      <div class="col-md-6 dashboard-section">
+        <div class="text-center">
+          <h2>Opened Capsules</h2>
+          <div id="capsulesContainer">
+            <!-- Capsules will be dynamically added here -->
+          </div>
+          <p id="noCapsulesMessage">No opened capsules.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 dashboard-section">
+        <div class="text-center">
+          <h2 id='helloWorld'>Add New Capsule</h2>
+          <form id="capsule_form" enctype="multipart/form-data" action="javascript:void(0);">
+            <label for="title" id="title">Title *</label><br>
+            <input type="text" id="whowho" name="title" required><br>
+
+            <label for="message">Message *</label><br>
+            <textarea id="message" name="message" required></textarea><br>
+
+            <label for="image">Image</label><br>
+            <input type="file" id="image" name="image" accept=".png, .jpg, .jpeg, .gif">
+
+            <label for="open_at">Open At </label><br>
+            <input type="date" id="open_at" name="open_at" required><br>
+
+            <input type="submit" value="Add Capsule" id="submit_btn"><br>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}

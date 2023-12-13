@@ -7,12 +7,14 @@ from flask import (
     request, redirect,
     url_for,
     make_response,
-    make_response
+    abort,
+    jsonify,
+    send_from_directory
 )
 from authentication import authenticate
 from mail import esmtp
-from engine import db
-
+from datetime import datetime
+import base64
 
 app = Flask(__name__)
 
@@ -58,6 +60,7 @@ def dashboard():
     """
     if not authenticate.isAuthenticated(request):
         return redirect(url_for('login'))
+
 
     return render_template('dashboard.html')
 
@@ -132,7 +135,73 @@ def resetPassword(token):
         return render_template('resetpassword.html', errors=errors)
     return render_template('resetpassword.html')
 
+@app.route('/api/v1/capsules/', methods=['GET'])
+def capsules():
+    if not authenticate.isAuthenticated(request):
+        return jsonify({'error': 'User not authenticated'}), 401
 
+    capsules = authenticate.getcapsules(request)
+
+    if not capsules:
+        return jsonify({'error': 'No capsule available for this user'}), 401
+
+    for capsule in capsules:
+        domain = 'https://www.orino.tech/capsule/share/'
+        capsulid = capsule['capsuleid']
+        link = capsule['link']
+        
+        if not link:
+            token = authenticate.create_link_for_a_capsule(capsulid)
+            capsule['link'] = domain + token
+        else:
+            capsule['link'] = domain + link
+
+    return jsonify(capsules)
+
+@app.route('/api/v1/capsules/add', methods=['POST'])
+def addcapsule():
+    if not authenticate.isAuthenticated(request):
+        return jsonify({'error': 'User not authenticated'}), 401
+
+    if not request.form.get('open_at'):
+        return jsonify({'error': 'open_at date missing'}), 400
+
+    title = request.form.get('message', '').strip()
+    image = request.files.get('image')
+    message = request.form.get('message', '').strip()
+    open_at = request.form.get('open_at')
+    if not title:
+        return jsonify({'error': 'title is missing'}), 400
+
+    if not message:
+        return jsonify({'error': 'message is missing'}), 400
+
+    try:
+        open_at = datetime.strptime(open_at, '%Y-%m-%d').date()
+    except:
+        return jsonify({'error': 'open_at isnt valid'}), 400
+
+    currentDate = datetime.utcnow().date()
+
+    if open_at <= currentDate:
+        abort(404)
+
+    if image:
+        filename = image.filename
+        maxsize = 10 * 1024 * 1024
+        if image.content_length > maxsize:
+            return jsonify({'error': 'image size exceeds the limit'}), 400
+        if not authenticate.allowedFile(filename):
+            return jsonify({'error': 'image not allowed'}), 400
+
+    authenticate.addCapsuleToDB(request, title, image, message, open_at)
+
+    return jsonify({'success': True}), 200
+
+@app.route('/js/<filename>')
+def serve_js(filename):
+    # this will be removed as nginx will handle scripts
+    return send_from_directory('js/', filename)
 
 if __name__ == "__main__":
     app.run(host="localhost", port=5000, debug=True)

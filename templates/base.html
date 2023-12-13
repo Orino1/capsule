@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <title>{% block title %} {% endblock %}</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
   {% block links %} {% endblock %}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,9 +28,9 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <a class="navbar-brand" href="{{url_for('home')}}">Home</a>
     <div class="ml-auto">
-      <a class="btn btn-primary mr-2" href="{{url_for('login')}}">Login</a>
-      <a class="btn btn-success" href="{{url_for('signup')}}">Sign Up</a>
-      <a class="btn btn-success" href="{{url_for('logout')}}" style="background-color: red;">Logout</a>
+      <a id="loginButton" class="btn btn-primary mr-2" href="{{url_for('login')}}">Login</a>
+      <a id="signupButton" class="btn btn-success" href="{{url_for('signup')}}">Sign Up</a>
+      <a id="logoutButton" class="btn btn-success" href="{{url_for('logout')}}" style="background-color: red;">Logout</a>
     </div>
   </nav>
   {% block body %} {% endblock %}
@@ -38,9 +39,30 @@
       <span class="text-muted">© 2023 Your Company</span>
     </div>
   </footer>
+  <script>
+    function cookieExists(name) {
+      return document.cookie.split(';').some((item) => item.trim().startsWith(`${name}=`));
+    }
 
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    function toggleButtonsVisibility() {
+      const loginButton = document.getElementById('loginButton');
+      const signupButton = document.getElementById('signupButton');
+      const logoutButton = document.getElementById('logoutButton');
+
+      const sessionExists = cookieExists('session');
+
+      if (sessionExists) {
+        loginButton.style.display = 'none';
+        signupButton.style.display = 'none';
+        logoutButton.style.display = 'inline-block';
+      } else {
+        loginButton.style.display = 'inline-block';
+        signupButton.style.display = 'inline-block';
+        logoutButton.style.display = 'none';
+      }
+    }
+
+    window.onload = toggleButtonsVisibility;
+  </script>
 </body>
 </html>

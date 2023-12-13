@@ -82,11 +82,24 @@ class DatabaseEngine:
             List of error messages indicating issues with the database
             operation.
         """
-        cursor = self.__connection.cursor(dictionary=True)
+        cursor = self.__connection.cursor()
         try:
             cursor.execute(query, param)
             self.__connection.commit()
             return []
+        except Exception as err:
+            print(err)
+            self.__connection.rollback()
+            return ["An error occurred:"]
+        finally:
+            cursor.close()
+
+    def queryAll(self, query, param):
+        cursor = self.__connection.cursor(dictionary=True)
+        try:
+            cursor.execute(query, param)
+            result = cursor.fetchall()
+            return result
         except:
             self.__connection.rollback()
             return ['An error occurred']
