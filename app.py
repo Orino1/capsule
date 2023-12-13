@@ -139,8 +139,9 @@ def capsules():
     if not authenticate.isAuthenticated(request):
         return jsonify({'error': 'User not authenticated'}), 401
 
-    capsules = authenticate.getcapsules(request)
-
+    succes, capsules = authenticate.getcapsules(request)
+    if not succes:
+        return jsonify({'error': error.errors}), 401
     if not capsules:
         return jsonify({'error': 'No capsule available for this user'}), 401
 
