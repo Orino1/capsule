@@ -145,7 +145,7 @@ class AuthenticationHandler():
 
         succes, result = db.queryOne(query, param)
 
-        if not succes and not result:
+        if not result:
             return False
 
         hashedPass = result.get('hashed_password')
