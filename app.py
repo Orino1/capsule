@@ -145,7 +145,7 @@ def addcapsule():
     if not session_manager.is_authenticated(request):
         return jsonify({'error': 'User not authenticated'}), 401
 
-    title = request.form.get('message', '').strip()
+    title = request.form.get('title', '').strip()
     image = request.files.get('image')
     message = request.form.get('message', '').strip()
     open_at = request.form.get('open_at')
