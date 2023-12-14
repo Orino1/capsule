@@ -174,7 +174,7 @@ def addcapsule():
         maxsize = 10 * 1024 * 1024
         if image.content_length > maxsize:
             return jsonify({'error': 'image size exceeds the limit'}), 400
-        if not authenticate.allowedFile(filename):
+        if not file_handler.is_allowed_file(filename):
             return jsonify({'error': 'image not allowed'}), 400
 
     capsule_handler.add_capsule_to_db(request, title, image, message, open_at)
