@@ -12,6 +12,13 @@ from flask import (
     send_from_directory
 )
 from authentication import authenticate
+from authentication import verification
+from authentication import reset_handler
+from authentication import registration
+from authentication import file_handler
+from authentication import capsule_handler
+from authentication import session_manager
+from authentication import utility
 from mail import esmtp
 from datetime import datetime
 from error import error
@@ -28,24 +35,15 @@ def clear_errors():
 
 @app.route("/")
 def home():
-    """
-    Render the home page.
-    """
     return render_template("home.html")
 
 
 @app.route("/signup", methods=['POST', 'GET'])
 def signup():
-    """
-    Handle user signup.
-
-    If user is authenticated, redirect to the dashboard page.
-    If the request method is POST, attempt to register the user.
-    """
     if request.method == 'POST':
-        token = authenticate.tokenGenerator()
+        token = utility.url_token_generator()
 
-        if authenticate.registerUser(request, token):
+        if registration.register_user(request, token):
             email = request.form.get('email', '').lower().strip()
             username = request.form.get('username', '').strip()
             esmtp.verifyEmail(email, username, token)
@@ -58,11 +56,7 @@ def signup():
 
 @app.route('/dashboard')
 def dashboard():
-    """
-    Render the user dashboard.
-    Redirect to login if the user is not authenticated.
-    """
-    if not authenticate.isAuthenticated(request):
+    if not session_manager.is_authenticated(request):
         return redirect(url_for('login'))
 
     return render_template('dashboard.html')
@@ -70,14 +64,8 @@ def dashboard():
 
 @app.route("/login", methods=['POST', 'GET'])
 def login():
-    """
-    Handle user login.
-
-    If user is authenticated, redirect to the dashboard page.
-    If the request method is POST, attempt to log in the user.
-    """
     if request.method == 'POST':
-        session = authenticate.loginUser(request)
+        session = authenticate.login_user(request)
         if session:
             response = make_response(redirect(url_for('dashboard')))
             response.set_cookie('session', session, max_age=3600)
@@ -90,13 +78,8 @@ def login():
 
 @app.route('/logout')
 def logout():
-    """
-    Handle user logout.
-
-    Delete the user session and redirect to the login page.
-    """
     session = request.cookies.get('session', '')
-    authenticate.deleteSession(session)
+    session_manager.delete_session(session)
     response = make_response(redirect(url_for('login')))
     response.set_cookie('session', '', max_age=0)
     return response
@@ -104,44 +87,42 @@ def logout():
 
 @app.route('/confirm/<token>')
 def emailConfirm(token):
-    """
-
-    """
-    authenticate.validateEmail(token)
+    verification.validate_email(token)
     return redirect(url_for('login'))
+
 
 @app.route('/forgotpassword', methods=['POST', 'GET'])
 def forgotPassword():
-    """
-    """
     if request.method == 'POST':
         # generate the token and send an email
         email = request.form.get('email', '').lower().strip()
-        if authenticate.email(email):
-            token = authenticate.tokenGenerator()
-            authenticate.setPassResetToken(email, token)
-            esmtp.sendResetPass(email, token)
+        if verification.email_exists(email):
+            url_token = utility.url_token_generator()
+            reset_handler.set_password_reset_token(email, url_token)
+            esmtp.sendResetPass(email, url_token)
         return render_template('passresetconfirm.html')
     return render_template('forgotpass.html')
 
+
 @app.route('/reset/<token>', methods=['POST', 'GET'])
 def resetPassword(token):
-    #resetPass
     if request.method == 'POST':
-        errors = authenticate.changePass(request, token)
-        if authenticate.changePass(request, token):
+        if reset_handler.change_password(request, token):
             return redirect(url_for('login'))
         return render_template('resetpassword.html', errors='No user Found please check your link')
     return render_template('resetpassword.html')
 
+
 @app.route('/api/v1/capsules/', methods=['GET'])
 def capsules():
-    if not authenticate.isAuthenticated(request):
+    if not session_manager.is_authenticated(request):
         return jsonify({'error': 'User not authenticated'}), 401
 
-    succes, capsules = authenticate.getcapsules(request)
+    succes, capsules = capsule_handler.get_capsules(request)
+
     if not succes:
         return jsonify({'error': error.errors}), 401
+
     if not capsules:
         return jsonify({'error': 'No capsule available for this user'}), 401
 
@@ -149,27 +130,29 @@ def capsules():
         domain = 'https://www.orino.tech/capsule/share/'
         capsulid = capsule['capsuleid']
         link = capsule['link']
-        
         if not link:
-            token = authenticate.create_link_for_a_capsule(capsulid)
+            token = utility.url_token_generator()
+            capsule_handler.create_link_for_a_capsule(token, capsulid)
             capsule['link'] = domain + token
         else:
             capsule['link'] = domain + link
 
     return jsonify(capsules)
 
+
 @app.route('/api/v1/capsules/add', methods=['POST'])
 def addcapsule():
-    if not authenticate.isAuthenticated(request):
+    if not session_manager.is_authenticated(request):
         return jsonify({'error': 'User not authenticated'}), 401
-
-    if not request.form.get('open_at'):
-        return jsonify({'error': 'open_at date missing'}), 400
 
     title = request.form.get('message', '').strip()
     image = request.files.get('image')
     message = request.form.get('message', '').strip()
     open_at = request.form.get('open_at')
+
+    if not open_at:
+        return jsonify({'error': 'open_at missing'}), 400
+
     if not title:
         return jsonify({'error': 'title is missing'}), 400
 
@@ -184,7 +167,7 @@ def addcapsule():
     currentDate = datetime.utcnow().date()
 
     if open_at <= currentDate:
-        abort(404)
+        return jsonify({'error': 'open_at isnt valid'}), 400
 
     if image:
         filename = image.filename
@@ -194,14 +177,16 @@ def addcapsule():
         if not authenticate.allowedFile(filename):
             return jsonify({'error': 'image not allowed'}), 400
 
-    authenticate.addCapsuleToDB(request, title, image, message, open_at)
+    capsule_handler.add_capsule_to_db(request, title, image, message, open_at)
 
     return jsonify({'success': True}), 200
+
 
 @app.route('/js/<filename>')
 def serve_js(filename):
     # this will be removed as nginx will handle scripts
     return send_from_directory('js/', filename)
+
 
 if __name__ == "__main__":
     app.run(host="localhost", port=5000, debug=True)

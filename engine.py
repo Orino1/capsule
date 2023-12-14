@@ -19,7 +19,7 @@ class DatabaseEngine:
             database=self.__database,
         )
 
-    def insert(self, query, param):
+    def execute_query(self, query, param):
         cursor = self.__connection.cursor()
         try:
             cursor.execute(query, param)
@@ -32,7 +32,7 @@ class DatabaseEngine:
         finally:
             cursor.close()
 
-    def queryAll(self, query, param):
+    def query_all(self, query, param):
         cursor = self.__connection.cursor(dictionary=True)
         try:
             cursor.execute(query, param)
@@ -45,7 +45,7 @@ class DatabaseEngine:
         finally:
             cursor.close()
 
-    def queryOne(self, query, param):
+    def query_one(self, query, param):
         cursor = self.__connection.cursor(dictionary=True)
         try:
             cursor.execute(query, param)
@@ -57,7 +57,7 @@ class DatabaseEngine:
         finally:
             cursor.close()
 
-    def resetTokenExists(self, token):
+    def reset_token_exists(self, token):
         """
 
         """
@@ -68,7 +68,7 @@ class DatabaseEngine:
 
         return success and result
 
-    def emailExists(self, email):
+    def email_exists(self, email):
         """
         """
         query = "SELECT * FROM users WHERE email = %s"
@@ -78,7 +78,7 @@ class DatabaseEngine:
 
         return success and result
 
-    def tokenExists(self, token):
+    def token_exists(self, token):
         """
 
         """
