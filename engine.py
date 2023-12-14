@@ -64,7 +64,7 @@ class DatabaseEngine:
         query = "SELECT * FROM users WHERE reset_password_token = %s"
         param = (token,)
 
-        success, result = self.queryOne(query, param)
+        success, result = self.query_one(query, param)
 
         return success and result
 
@@ -74,7 +74,7 @@ class DatabaseEngine:
         query = "SELECT * FROM users WHERE email = %s"
         param = (email,)
 
-        success, result = self.queryOne(query, param)
+        success, result = self.query_one(query, param)
 
         return success and result
 
@@ -85,7 +85,7 @@ class DatabaseEngine:
         query = "SELECT * FROM users WHERE email_verification_token = %s"
         param = (token,)
         
-        success, result = self.queryOne(query, param)
+        success, result = self.query_one(query, param)
 
         return success and result
 
