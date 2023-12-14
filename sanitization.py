@@ -5,7 +5,7 @@ from error import error
 
 class Sanitization:
 
-    def resetPassForm(self, request):
+    def reset_password_form(self, request):
         password = request.form.get('password1', '').strip()
         confirm_password = request.form.get('password2', '').strip()
         # both patterns are not mine
@@ -21,7 +21,7 @@ class Sanitization:
 
         return True
 
-    def loginForm(self, request):
+    def login_form(self, request):
 
         email = request.form.get('email', '').lower().strip()
         password = request.form.get('password', '').strip()
@@ -44,7 +44,7 @@ class Sanitization:
 
         return True
 
-    def registrationForm(self, request):
+    def registration_form(self, request):
  
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').lower().strip()
