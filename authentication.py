@@ -4,26 +4,7 @@ from sanitization import sanitize
 from engine import db
 import uuid
 from error import error
-
-class SessionManager:
-    SESSIONS = {}
-
-    def generate_session_token():
-        return secrets.token_hex(16)
-
-    def delete_session(session):
-        SessionManager.SESSIONS.pop(session, None)
-
-    def is_authenticated(request):
-        session = request.cookies.get('session', '')
-        return SessionManager.SESSIONS.get(session) is not None
-
-    def get_user_id(request):
-        session = request.cookies.get('session')
-        return SessionManager.SESSIONS.get(session)
-
-    def set_user_session(session_key, user_id):
-        SessionManager.SESSIONS[session_key] = user_id
+from session import session_manager
 
 
 class EmailVerification:
@@ -109,8 +90,8 @@ class UserAuthentication:
             user_id_query = f'SELECT id FROM users WHERE email = %s'
             user_id_params = (email,)
             success, result = db.query_one(user_id_query, user_id_params)
-            session = SessionManager.generate_session_token()
-            SessionManager.set_user_session(session, result['id'])
+            session = session_manager.generate_session_token()
+            session_manager.set_user_session(session, result['id'])
             return session
 
         return False
@@ -128,7 +109,7 @@ class Capsule:
 
     def add_capsule_to_db(self, request, title, image, message, open_at):
         capsule_id = str(uuid.uuid4())
-        user_id = SessionManager.get_user_id(request)
+        user_id = session_manager.get_user_id(request)
 
         if image:
             extension = image.filename.split('.')[-1]
@@ -144,7 +125,7 @@ class Capsule:
         return db.execute_query(insert_query, params)
 
     def get_capsules(self, request):
-        user_id = SessionManager.get_user_id(request)
+        user_id = session_manager.get_user_id(request)
         select_query = 'SELECT capsuleid, title, image, message, link FROM capsules WHERE user_id = %s AND opened = TRUE'
         params = (user_id,)
         return db.query_all(select_query, params)
@@ -167,5 +148,5 @@ reset_handler = PasswordReset()
 registration = UserRegistration()
 file_handler = FileHandler()
 capsule_handler = Capsule()
-session_manager = SessionManager()
+
 utility = Utility()

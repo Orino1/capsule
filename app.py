@@ -17,7 +17,7 @@ from authentication import reset_handler
 from authentication import registration
 from authentication import file_handler
 from authentication import capsule_handler
-from authentication import session_manager
+from session import session_manager
 from authentication import utility
 from mail import esmtp
 from datetime import datetime
