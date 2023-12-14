@@ -82,7 +82,7 @@ class DatabaseEngine:
         """
 
         """
-        query = "SELECT * FROM users WHERE email_verification_token = %s"
+        query = "SELECT * FROM users WHERE verification_token = %s"
         param = (token,)
         
         success, result = self.query_one(query, param)
