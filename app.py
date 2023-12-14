@@ -109,7 +109,7 @@ def resetPassword(token):
     if request.method == 'POST':
         if reset_handler.change_password(request, token):
             return redirect(url_for('login'))
-        return render_template('resetpassword.html', errors='No user Found please check your link')
+        return render_template('resetpassword.html', errors=error.errors)
     return render_template('resetpassword.html')
 
 
