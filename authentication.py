@@ -11,18 +11,18 @@ class SessionManager:
     def generate_session_token():
         return secrets.token_hex(16)
 
-    def delete_session(self, session):
+    def delete_session(session):
         SessionManager.SESSIONS.pop(session, None)
 
-    def is_authenticated(self, request):
+    def is_authenticated(request):
         session = request.cookies.get('session', '')
         return SessionManager.SESSIONS.get(session) is not None
 
-    def get_user_id(self, request):
+    def get_user_id(request):
         session = request.cookies.get('session')
         return SessionManager.SESSIONS.get(session)
 
-    def set_user_session(self, session_key, user_id):
+    def set_user_session(session_key, user_id):
         SessionManager.SESSIONS[session_key] = user_id
 
 
