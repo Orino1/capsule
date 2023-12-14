@@ -8,7 +8,7 @@ from error import error
 class SessionManager:
     SESSIONS = {}
 
-    def generate_session_token(self):
+    def generate_session_token():
         return secrets.token_hex(16)
 
     def delete_session(self, session):
