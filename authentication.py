@@ -12,7 +12,7 @@ class EmailVerification:
     def validate_email(self, verification_token):
         exists = db.token_exists(verification_token)
         if exists:
-            query = 'UPDATE users SET verified = 1 WHERE email_verification_token = %s'
+            query = 'UPDATE users SET verified = 1 WHERE verification_token = %s'
             params = (verification_token,)
             db.execute_query(query, params)
 
@@ -22,7 +22,7 @@ class EmailVerification:
 class PasswordReset:
 
     def set_password_reset_token(self, email, reset_token):
-        query = "UPDATE users SET reset_token = %s WHERE email = %s"
+        query = "UPDATE users SET reset_password_token = %s WHERE email = %s"
         params = (reset_token, email)
         db.execute_query(query, params)
 
@@ -36,8 +36,8 @@ class PasswordReset:
         password = request.form.get('password1', '').strip()
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
-        update_password_query = "UPDATE users SET hashed_password = %s WHERE reset_token = %s"
-        update_token_query = "UPDATE users SET reset_password_token = NULL WHERE reset_token = %s"
+        update_password_query = "UPDATE users SET hashed_password = %s WHERE reset_password_token = %s"
+        update_token_query = "UPDATE users SET reset_password_token = NULL WHERE reset_password_token = %s"
 
         params = (hashed_password, reset_token)
 

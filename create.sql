@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password VARCHAR(255),
     email VARCHAR(255) UNIQUE,
     username VARCHAR(35),
-    email_verification_token VARCHAR(255),
+    verification_token VARCHAR(255),
     verified BOOLEAN DEFAULT FALSE,
     reset_password_token VARCHAR(255) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
