@@ -31,6 +31,8 @@ class PasswordReset:
             return False
 
         if not db.reset_token_exists(reset_token):
+            error.clear_errors()
+            error.add_error('It look like this link is no longer valid :(')
             return False
 
         password = request.form.get('password1', '').strip()
